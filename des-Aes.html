@@ -1,0 +1,150 @@
+
+------------S-DES Encryption----------------
+<script>
+    function permute(bits, table) { return table.map(i => bits[i-1]).join(''); }
+    function leftShift(bits, n) { return bits.slice(n) + bits.slice(0, n); }
+    function xor(a, b) {
+        let res = "";
+        for (let i = 0; i < a.length; i++) res += (a[i] === b[i]) ? '0' : '1';
+        return res;
+    }
+
+    function parseTable(id) { return document.getElementById(id).value.trim().split(/\s+/).map(Number); }
+    function parseSBox(id) {
+        let val = document.getElementById(id).value.trim().split(/\s+/).map(Number);
+        return [val.slice(0,4), val.slice(4,8), val.slice(8,12), val.slice(12,16)];
+    }
+
+    function sboxProcess(input, box, name) {
+        let row = parseInt(input[0] + input[3], 2);
+        let col = parseInt(input[1] + input[2], 2);
+        let val = box[row][col];
+        let binaryVal = val.toString(2).padStart(2, '0');
+        let log = `${name} Input: ${input} (Row: ${row}, Col: ${col}) -> Output: ${binaryVal}\n`;
+        return { val: binaryVal, log: log };
+    }
+
+    function encrypt() {
+        let log = "";
+        const pt = document.getElementById("plaintext").value;
+        const key = document.getElementById("key").value;
+
+        // Load Tables
+        const P10 = parseTable("p10"), P8 = parseTable("p8"), IP = parseTable("ip");
+        const IP_inv = parseTable("ip_inv"), EP = parseTable("ep"), P4 = parseTable("p4");
+        const S0 = parseSBox("s0"), S1 = parseSBox("s1");
+
+        log += "=== KEY GENERATION ===\n";
+        let p10 = permute(key, P10);
+        let Lk = leftShift(p10.slice(0, 5), 1);
+        let Rk = leftShift(p10.slice(5), 1);
+        let K1 = permute(Lk + Rk, P8);
+        log += `K1: ${K1}\n\n`;
+
+        log += "=== INITIAL PERMUTATION ===\n";
+        let ip = permute(pt, IP);
+        let L0 = ip.slice(0, 4), R0 = ip.slice(4);
+        log += `IP Result: ${ip} (L0: ${L0}, R0: ${R0})\n\n`;
+
+        log += "=== ROUND 1 ===\n";
+        let ep = permute(R0, EP);
+        log += `Expansion (EP): ${ep}\n`;
+
+        let xor1 = xor(ep, K1);
+        log += `XOR with K1:   ${xor1}\n`;
+
+        let s0_res = sboxProcess(xor1.slice(0, 4), S0, "S0");
+        let s1_res = sboxProcess(xor1.slice(4), S1, "S1");
+        log += s0_res.log + s1_res.log;
+
+        let sOut = s0_res.val + s1_res.val;
+        let p4 = permute(sOut, P4);
+        log += `P4 Permutation: ${p4}\n`;
+
+        let L1 = xor(L0, p4);
+        log += `L0 XOR P4:      ${L1}\n`;
+
+        // Result after Round 1 (No Swap for 1-round demonstration)
+        let combined = L1 + R0;
+        log += `Pre-output:     ${combined}\n\n`;
+
+        log += "=== FINAL PERMUTATION ===\n";
+        let cipher = permute(combined, IP_inv);
+        log += `Ciphertext:     ${cipher}`;
+
+        document.getElementById("output").textContent = log;
+    }
+</script>
+</body>
+</html>
+--------------------AES--------------------------
+<script>
+function hexToBytes(hex){
+    let bytes=[];
+    for(let i=0;i<hex.length;i+=2)
+        bytes.push(parseInt(hex.substr(i,2),16));
+    return bytes;
+}
+
+function bytesToHex(bytes){
+    return bytes.map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function rotWord(word){
+    return [word[1],word[2],word[3],word[0]];
+}
+
+function subWord(word){
+    return word.map(b=>sbox[b]);
+}
+
+function xorWords(a,b){
+    return a.map((v,i)=>v^b[i]);
+}
+
+function expandKey(){
+
+let output="";
+let keyHex=document.getElementById("key").value.trim();
+
+let keyBytes=hexToBytes(keyHex);
+
+let w=[];
+
+// W0-W3
+for(let i=0;i<4;i++)
+    w[i]=keyBytes.slice(i*4,(i+1)*4);
+
+output+="Initial Words:\n";
+for(let i=0;i<4;i++)
+    output+="W"+i+": "+bytesToHex(w[i])+"\n";
+
+// Generate W4 to W8
+for(let i=4;i<=8;i++){
+
+    let temp=w[i-1].slice();
+    output+="\nGenerating W"+i+"\n";
+
+    if(i%4===0){
+        output+="Before RotWord: "+bytesToHex(temp)+"\n";
+        temp=rotWord(temp);
+        output+="After RotWord: "+bytesToHex(temp)+"\n";
+
+        temp=subWord(temp);
+        output+="After SubWord: "+bytesToHex(temp)+"\n";
+
+        temp[0]^=Rcon[(i/4)-1];
+        output+="After Rcon XOR: "+bytesToHex(temp)+"\n";
+    }
+
+    w[i]=xorWords(w[i-4],temp);
+    output+="W"+i+" = W"+(i-4)+" XOR temp = "+bytesToHex(w[i])+"\n";
+}
+
+document.getElementById("output").textContent=output;
+
+}
+
+</script>
+</body>
+</html>

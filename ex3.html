@@ -1,0 +1,132 @@
+-------------RSA---------------
+<script>
+function gcd(a, b) {
+    while (b != 0) {
+        let temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
+function modInverse(e, phi) {
+    for (let d = 1; d < phi; d++) {
+        if ((d * e) % phi === 1) {
+            return d;
+        }
+    }
+    return -1;
+}
+
+function modPow(base, exponent, modulus) {
+    let result = 1;
+    base = base % modulus;
+
+    while (exponent > 0) {
+        if (exponent % 2 === 1)
+            result = (result * base) % modulus;
+
+        exponent = Math.floor(exponent / 2);
+        base = (base * base) % modulus;
+    }
+    return result;
+}
+
+function generateRSA() {
+    let p = parseInt(document.getElementById("p").value);
+    let q = parseInt(document.getElementById("q").value);
+    let message = parseInt(document.getElementById("message").value);
+
+    let output = document.getElementById("output");
+    output.innerHTML = "";
+
+    if (!p || !q || !message) {
+        output.innerHTML = "⚠️ Please enter all values.";
+        return;
+    }
+
+    let n = p * q;
+    let phi = (p - 1) * (q - 1);
+
+    let e = 3;
+    while (gcd(e, phi) !== 1) {
+        e++;
+    }
+
+    let d = modInverse(e, phi);
+
+    let cipher = modPow(message, e, n);
+    let decrypted = modPow(cipher, d, n);
+
+    output.innerHTML += "<b>STEP 1:</b> n = p × q = " + n + "<br>";
+    output.innerHTML += "<b>STEP 2:</b> φ(n) = (p-1)(q-1) = " + phi + "<br>";
+    output.innerHTML += "<b>STEP 3:</b> Public Key (e, n) = (" + e + ", " + n + ")<br>";
+    output.innerHTML += "<b>STEP 4:</b> Private Key (d, n) = (" + d + ", " + n + ")<br><br>";
+    output.innerHTML += "<b>Encrypted Message:</b> " + cipher + "<br>";
+    output.innerHTML += "<b>Decrypted Message:</b> " + decrypted + "<br>";
+}
+</script>
+
+</body>
+</html>
+---------------------------DIFFI HELLMAN ALGORITHM------------------------------
+
+<script>
+function modPow(base, exponent, modulus) {
+    let result = 1;
+    base = base % modulus;
+
+    while (exponent > 0) {
+        if (exponent % 2 === 1)
+            result = (result * base) % modulus;
+
+        exponent = Math.floor(exponent / 2);
+        base = (base * base) % modulus;
+    }
+    return result;
+}
+
+function diffieHellman() {
+
+    let p = parseInt(document.getElementById("p").value);
+    let g = parseInt(document.getElementById("g").value);
+    let a = parseInt(document.getElementById("a").value);
+    let b = parseInt(document.getElementById("b").value);
+
+    let A = modPow(g, a, p);
+    let B = modPow(g, b, p);
+
+    let keyAlice = modPow(B, a, p);
+    let keyBob = modPow(A, b, p);
+
+    let output = `
+STEP 1: Public Values
+p = ${p}
+g = ${g}
+
+STEP 2: Private Keys
+Alice Private Key (a) = ${a}
+Bob Private Key (b) = ${b}
+
+STEP 3: Public Keys
+Alice Public Key (A) = ${A}
+Bob Public Key (B) = ${B}
+
+STEP 4: Shared Secret Key
+Secret Key (Alice) = ${keyAlice}
+Secret Key (Bob) = ${keyBob}
+
+`;
+
+    if (keyAlice === keyBob) {
+        output += "✅ Shared Secret Key = " + keyAlice;
+    } else {
+        output += "❌ Key mismatch!";
+    }
+
+    document.getElementById("result").innerText = output;
+}
+</script>
+
+</body>
+</html>

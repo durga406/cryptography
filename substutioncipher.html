@@ -1,0 +1,146 @@
+CTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Substitution Ciphers</title>
+<style>
+    body { font-family: Arial; background:; padding:20px; }
+    .box {
+        background:white;
+        padding:20px;
+        margin-bottom:20px;
+        border-radius:8px;
+    }
+    textarea, input, button {
+        width:100%;
+        padding:8px;
+        margin-top:8px;
+    }
+    button {
+        background:#007bff;
+        color:white;
+        border:none;
+        cursor:pointer;
+    }
+    button:hover { background:#0056b3; }
+    h2 { color:#333; }
+</style>
+</head>
+<body>
+
+<h1>Substitution Cipher Algorithms</h1>
+
+<!-- ================= AFFINE CIPHER ================= -->
+<div class="box">
+<h2>Affine Cipher</h2>
+
+<textarea id="affineText" placeholder="Enter text"></textarea>
+<input type="number" id="aKey" placeholder="Enter key a (coprime with 26)">
+<input type="number" id="bKey" placeholder="Enter key b">
+
+<button onclick="affineEncrypt()">Encrypt</button>
+<button onclick="affineDecrypt()">Decrypt</button>
+
+<p id="affineResult">Result:</p>
+</div>
+
+<!-- ================= VIGENERE CIPHER ================= -->
+<div class="box">
+<h2>Vigenère Cipher</h2>
+
+<textarea id="vigText" placeholder="Enter text"></textarea>
+<input type="text" id="vigKey" placeholder="Enter key">
+
+<button onclick="vigEncrypt()">Encrypt</button>
+<button onclick="vigDecrypt()">Decrypt</button>
+
+<p id="vigResult">Result:</p>
+</div>
+
+<!-- ================= PLAYFAIR CIPHER ================= -->
+<div class="box">
+<h2>Playfair Cipher</h2>
+
+<textarea id="pfText" placeholder="Enter text"></textarea>
+<input type="text" id="pfKey" placeholder="Enter key">
+
+<button onclick="pfEncrypt()">Encrypt</button>
+
+<p id="pfResult">Result:</p>
+</div>
+
+<script>
+/* ============ AFFINE CIPHER ============ */
+function modInverse(a, m) {
+    for (let i = 1; i < m; i++)
+        if ((a * i) % m === 1) return i;
+    return null;
+}
+
+function affineEncrypt() {
+    let box = document.getElementById("affineText");
+    let text = box.value.toUpperCase().replace(/[^A-Z]/g,"");
+    let a = parseInt(aKey.value);
+    let b = parseInt(bKey.value);
+    let result = "";
+
+    for (let ch of text) {
+        let x = ch.charCodeAt(0) - 65;
+        result += String.fromCharCode((a*x + b) % 26 + 65);
+    }
+    affineResult.innerText = "Result: " + result;
+    box.value = result;
+}
+
+function affineDecrypt() {
+    let box = document.getElementById("affineText");
+    let text = box.value.toUpperCase().replace(/[^A-Z]/g,"");
+    let a = parseInt(aKey.value);
+    let b = parseInt(bKey.value);
+    let aInv = modInverse(a,26);
+    let result = "";
+
+    for (let ch of text) {
+        let y = ch.charCodeAt(0) - 65;
+        result += String.fromCharCode((aInv*(y-b+26))%26 + 65);
+    }
+    affineResult.innerText = "Result: " + result;
+    box.value = result;
+}
+
+/* ============ VIGENERE CIPHER ============ */
+function vigEncrypt() {
+    let box = document.getElementById("vigText");
+    let text = box.value.toUpperCase().replace(/[^A-Z]/g,"");
+    let key = vigKey.value.toUpperCase().replace(/[^A-Z]/g,"");
+    let result = "";
+
+    for (let i=0;i<text.length;i++) {
+        let p = text.charCodeAt(i)-65;
+        let k = key.charCodeAt(i%key.length)-65;
+        result += String.fromCharCode((p+k)%26+65);
+    }
+    vigResult.innerText = "Result: " + result;
+    box.value = result;
+}
+
+function vigDecrypt() {
+    let box = document.getElementById("vigText");
+    let text = box.value.toUpperCase().replace(/[^A-Z]/g,"");
+    let key = vigKey.value.toUpperCase().replace(/[^A-Z]/g,"");
+    let result = "";
+
+    for (let i=0;i<text.length;i++) {
+        let c = text.charCodeAt(i)-65;
+        let k = key.charCodeAt(i%key.length)-65;
+        result += String.fromCharCode((c-k+26)%26+65);
+    }
+    vigResult.innerText = "Result: " + result;
+    box.value = result;
+}
+
+</script>
+
+</body>
+</html>
+

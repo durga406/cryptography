@@ -1,0 +1,158 @@
+CTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playfair Cipher Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #ffffff;
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+        .box {
+            background: white;
+            padding: 30px;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 1px solid #eee;
+            text-align: center;
+        }
+        h2 { color: #333; margin-bottom: 20px; border-bottom: 2px solid #FF69B4; display: inline-block; padding-bottom: 5px; }
+        textarea, input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #FF69B4; /* PINK */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        button:hover { background: #FF1493; }
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff0f6;
+            border-radius: 8px;
+            color: #d63384;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            border: 1px dashed #FF69B4;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>Playfair Cipher</h2>
+
+    <textarea id="plainText" placeholder="Enter message..."></textarea>
+    <input type="text" id="secretKey" placeholder="Enter secret key">
+
+    <button onclick="handleEncrypt()">Encrypt Message</button>
+
+    <div class="result-box" id="output">
+        Result will appear here...
+    </div>
+</div>
+
+<script>
+/* ============ YOUR LOGIC START ============ */
+function createMatrix(key) {
+    key = key.toUpperCase().replace(/J/g, "I").replace(/[^A-Z]/g, "");
+    let used = "";
+    let matrix = [];
+
+    for (let ch of key) {
+        if (!used.includes(ch)) used += ch;
+    }
+
+    for (let i = 65; i <= 90; i++) {
+        let ch = String.fromCharCode(i);
+        if (ch !== "J" && !used.includes(ch))
+            used += ch;
+    }
+
+    let k = 0;
+    for (let i = 0; i < 5; i++) {
+        matrix[i] = [];
+        for (let j = 0; j < 5; j++) {
+            matrix[i][j] = used[k++];
+        }
+    }
+    return matrix;
+}
+
+function findPos(matrix, ch) {
+    for (let i = 0; i < 5; i++)
+        for (let j = 0; j < 5; j++)
+            if (matrix[i][j] === ch)
+                return [i, j];
+}
+
+function playfairEncrypt(text, key) {
+    let matrix = createMatrix(key);
+    text = text.toUpperCase().replace(/J/g,"I").replace(/[^A-Z]/g,"");
+    let result = "";
+
+    for (let i = 0; i < text.length; i += 2) {
+        let a = text[i];
+        let b = text[i+1] || "X";
+            b = "X";
+            i--;
+        }
+
+        let [r1, c1] = findPos(matrix, a);
+        let [r2, c2] = findPos(matrix, b);
+
+        if (r1 === r2) {
+            result += matrix[r1][(c1+1)%5];
+            result += matrix[r2][(c2+1)%5];
+        }
+        else if (c1 === c2) {
+            result += matrix[(r1+1)%5][c1];
+            result += matrix[(r2+1)%5][c2];
+        }
+        else {
+            result += matrix[r1][c2];
+            result += matrix[r2][c1];
+        }
+    }
+    return result;
+}
+/* ============ YOUR LOGIC END ============ */
+
+function handleEncrypt() {
+    const text = document.getElementById('plainText').value;
+    const key = document.getElementById('secretKey').value;
+
+    if(!text || !key) {
+        document.getElementById('output').innerText = "Please fill in both fields!";
+        return;
+    }
+
+    const encrypted = playfairEncrypt(text, key);
+    document.getElementById('output').innerText = encrypted;
+}
+</script>
+
+</body>
+</html>
